@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from time import sleep
+import random
 
 PATH = "E:\Python\Insta\chromedriver.exe"
 driver = webdriver.Chrome(PATH)
@@ -79,22 +80,48 @@ except:
     driver.quit()
 
 # zobrazit seznam účtů, které sledují cílový účet
-followers = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.XPATH, "//*[@id='react-root']/section/main/div/header/section/ul/li[2]/a")))
-followers_count = followers.text.strip("Sledující")
-followers_count = followers_count.split("(")[1]
-followers_count = followers_count.split(")")[0]
-followers_count = int(followers_count)
-print(followers_count)
-followers.click()
-followers_div = WebDriverWait(driver, 100).until(
-    EC.presence_of_element_located((By.XPATH, "/html/body/div[6]/div/div/div[2]")))
-driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", followers_div)
-accounts = WebDriverWait(driver, 10).until(
-    EC.visibility_of_all_elements_located((By.XPATH, "/html/body/div[6]/div/div/div[2]/ul/div/li[1]/div/div[1]/div[2]/div[1]/span/a")))
-for account in accounts:
-    print(account.text)
 
 
+def FollowUnfollow(mode):
+    followers = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//*[@id='react-root']/section/main/div/header/section/ul/li[2]/a")))
+    followers_count = followers.text.strip("Sledující")
+    followers_count = followers_count.split("(")[1]
+    followers_count = followers_count.split(")")[0]
+    followers_count = int(followers_count)
+    print(followers_count)
+    followers.click()
+    followers_div = WebDriverWait(driver, 100).until(
+        EC.presence_of_element_located((By.XPATH, "/html/body/div[6]/div/div/div[2]")))
+    for i in range(followers_count // 8):
+        driver.execute_script('''
+    var fDialog = document.querySelector('div[role="dialog"] .isgrP');
+    fDialog.scrollTop = fDialog.scrollHeight
+''')
+        sleep(2)
+    for i in range(1, followers_count):
+        follow_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[6]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button".format(i))))
+        if follow_button.text == "Sledování" and mode == "1":
+            follow_button.click()
+            sleep(1.5)
+            print("Follow")
+            if random.randint(1, 100) < 25:
+                sleep(4)
+        elif follow_button.text == "Sleduji" and mode == "2" or follow_button.text == "Vyžádáno" and mode == "2":
+            follow_button.click()
+            unfollow_button = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div/div/div/div[3]/button[1]")))
+            unfollow_button.click()
+            sleep(1.5)
+            print("Unfollow")
+            if random.randint(1, 100) < 25:
+                sleep(4)
+
+
+mode = input("Zadej 1 pro follow nebo 2 pro unfollow: ")
+FollowUnfollow(mode)
 input()
 driver.quit()
+#/html/body/div[6]/div/div/div[2]/ul/div/li[224]/div/div[2]/button
+#/html/body/div[7]/div/div/div/div[3]/button[1]
